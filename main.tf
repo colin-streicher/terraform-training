@@ -51,16 +51,16 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
 resource "azurerm_public_ip" "bastion_public_ip" {
   name                = "my-virtual-machine-ip"
   allocation_method   = "Static"
-  location              = var.resource_group_location
-  resource_group_name   = var.resource_group_name
+  location              = azurerm_resource_group.rg.location
+  resource_group_name   = azurerm_resource_group.rg.name
   tags                = local.l_tags
 }
 
 # Create Network Security Group and rules
 resource "azurerm_network_security_group" "nsg" {
   name                = "my-nsg"
-  location              = var.resource_group_location
-  resource_group_name   = var.resource_group_name
+  location              = azurerm_resource_group.rg.location
+  resource_group_name   = azurerm_resource_group.rg.name
   tags                = local.l_tags
 
   security_rule {
@@ -79,8 +79,8 @@ resource "azurerm_network_security_group" "nsg" {
 # Create network interface
 resource "azurerm_network_interface" "nic" {
   name                = "my-nic"
-  location              = var.resource_group_location
-  resource_group_name   = var.resource_group_name
+  location              = azurerm_resource_group.rg.location
+  resource_group_name   = azurerm_resource_group.rg.name
   tags                = local.l_tags
 
   ip_configuration {
@@ -101,13 +101,13 @@ resource "azurerm_subnet" "subnet_internal" {
   name                 = "internal"
   address_prefixes     = var.internal_subnet_space
   virtual_network_name = azurerm_virtual_network.vnet.name
-  resource_group_name   = var.resource_group_name
+  resource_group_name   = azurerm_resource_group.rg.name
 }
 resource "azurerm_virtual_network" "vnet" {
   name                = "my-vnet"
   address_space       = var.vnet_address_space
-  location              = var.resource_group_location
-  resource_group_name   = var.resource_group_name
+  location              = azurerm_resource_group.rg.location
+  resource_group_name   = azurerm_resource_group.rg.name
   tags                = local.l_tags
 }
 

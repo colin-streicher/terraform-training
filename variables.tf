@@ -1,14 +1,16 @@
 variable "resource_group_name" {
   type = string
+  default = "my-resource"
 }
 
 variable "resource_group_location" {
   type = string
+  default = "eastus"
 }
-
-variable "resource_group_id" {
-  type = string
-}
+#
+#variable "resource_group_id" {
+#  type = string
+#}
 
 variable "vnet_address_space" {
   description = "Address space for the virtual network"
@@ -25,4 +27,5 @@ variable "internal_subnet_space" {
 variable "tags" {
   type = map(string)
   description = "Tags"
+  default = {}
 }
