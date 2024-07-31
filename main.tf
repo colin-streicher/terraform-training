@@ -7,8 +7,6 @@ resource "azurerm_resource_group" "rg" {
     location = var.resource_group_location
 }
 
-
-## OS Disk ==============
 # Generate random text for a unique storage account name
 resource "random_id" "rnd" {
   keepers = {
@@ -19,7 +17,6 @@ resource "random_id" "rnd" {
 }
 
 ## Virtual Machine ==============
-
 resource "azurerm_linux_virtual_machine" "linux_vm" {
   name                  = "myvirtualmachine"
   network_interface_ids = [azurerm_network_interface.nic.id]
@@ -50,7 +47,6 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
     public_key = tls_private_key.ssh.public_key_openssh
   }
 }
-
 
 resource "azurerm_public_ip" "bastion_public_ip" {
   name                = "my-virtual-machine-ip"
