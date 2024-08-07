@@ -1,11 +1,14 @@
 locals {
-  l_tags = merge(var.tags, {})
+  l_tags = merge(var.tags, {client=var.client_name})
   vm_name = random_pet.pet-name.id
 }
+
+data "azurerm_subscription" "training" {}
 
 resource "azurerm_resource_group" "rg" {
   name     = var.resource_group_name
   location = var.resource_group_location
+  tags = local.l_tags
 }
 
 resource "azurerm_ssh_public_key" "sshkey" {
@@ -15,40 +18,50 @@ resource "azurerm_ssh_public_key" "sshkey" {
   resource_group_name = azurerm_resource_group.rg.name
 }
 
-# Generate random text for a unique storage account name
-resource "random_id" "rnd" {
-  keepers = {
-    # Generate a new ID only when a new resource group is defined
-    resource_group = azurerm_resource_group.rg.name
-  }
-  byte_length = 4
+resource "azurerm_user_assigned_identity" "uai" {
+  location            = azurerm_resource_group.rg.location
+  name                = "${random_pet.pet-name.id}-uai"
+  resource_group_name = azurerm_resource_group.rg.name
 }
 
-resource "random_pet" "pet-name" {
-  keepers = {
-    resource_group = azurerm_resource_group.rg.name
-  }
+resource "azurerm_role_assignment" "kv_certificate_user" {
+  principal_id = azurerm_user_assigned_identity.uai.principal_id
+#  role_definition_id = "db79e9a7-68ee-4b58-9aeb-b90e7c24fcba"
+  role_definition_name = "Key Vault Certificate User"
+  scope        = data.azurerm_subscription.training.id
+}
+
+resource "azurerm_role_assignment" "kv_secrets_user" {
+  principal_id = azurerm_user_assigned_identity.uai.principal_id
+#  role_definition_id = "4633458b-17de-408a-b874-0445c86b69e6"
+  role_definition_name = "Key Vault Secrets User"
+  scope        = data.azurerm_subscription.training.id
 }
 
 ## Virtual Machine ==============
 resource "azurerm_linux_virtual_machine" "linux_vm" {
   name                  = local.vm_name
   network_interface_ids = [azurerm_network_interface.nic.id]
-  size                  = "Standard_D2as_v4"
+  size                  = "Standard_A4_v2"
   location              = azurerm_resource_group.rg.location
   resource_group_name   = azurerm_resource_group.rg.name
   tags                  = local.l_tags
 
+  identity {
+    type = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.uai.id]
+  }
+
   os_disk {
     name                 = "OsDisk_1_${random_id.rnd.hex}"
     caching              = "ReadWrite"
-    storage_account_type = "Premium_LRS"
+    storage_account_type = "Standard_LRS"
   }
 
   source_image_reference {
     publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts-gen2"
+    offer     = "ubuntu-24_04-lts"
+    sku       = "server-gen1"
     version   = "latest"
   }
 
@@ -68,6 +81,10 @@ resource "azurerm_public_ip" "public_ip" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   tags                = local.l_tags
+#  depends_on = [azurerm_key_vault.akv]
+#  lifecycle {
+#    ignore_changes = [azure]
+#  }
 }
 
 resource "azurerm_network_security_group" "nsg" {
@@ -108,24 +125,3 @@ resource "azurerm_network_interface_security_group_association" "nsg-group-assoc
   network_interface_id      = azurerm_network_interface.nic.id
   network_security_group_id = azurerm_network_security_group.nsg.id
 }
-
-resource "azurerm_subnet" "subnet_internal" {
-  name                 = "${random_pet.pet-name.id}-subnet"
-  address_prefixes     = var.internal_subnet_space
-  virtual_network_name = azurerm_virtual_network.vnet.name
-  resource_group_name  = azurerm_resource_group.rg.name
-}
-
-resource "azurerm_virtual_network" "vnet" {
-  name                = "${random_pet.pet-name.id}-vnet"
-  address_space       = var.vnet_address_space
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  tags                = local.l_tags
-}
-
-resource "tls_private_key" "ssh" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
-

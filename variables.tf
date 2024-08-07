@@ -1,6 +1,6 @@
 variable "resource_group_name" {
   type    = string
-  default = "my-resource"
+  default = "colin-rg"
 }
 
 variable "resource_group_location" {
@@ -24,4 +24,8 @@ variable "tags" {
   type        = map(string)
   description = "Tags"
   default     = {}
+}
+
+variable "client_name" {
+  default = "A new Client"
 }

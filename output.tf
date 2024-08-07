@@ -1,7 +1,3 @@
-output "private_key_pem" {
-  value     = nonsensitive(tls_private_key.ssh.private_key_pem)
-}
-
 output "vm" {
   value = {
     config = {
