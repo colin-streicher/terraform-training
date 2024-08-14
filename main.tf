@@ -38,6 +38,14 @@ resource "azurerm_role_assignment" "kv_secrets_user" {
   scope        = data.azurerm_subscription.training.id
 }
 
+data "template_cloudinit_config" "craftcms_config" {
+  gzip = true
+  base64_encode = true
+  part {
+    content_type = "text/cloud-config"
+    content = "packages: ['php', 'php-xml', 'npm', 'nginx']"
+  }
+}
 ## Virtual Machine ==============
 resource "azurerm_linux_virtual_machine" "linux_vm" {
   name                  = local.vm_name
@@ -45,7 +53,7 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
   size                  = "Standard_A1_v2"
   location              = azurerm_resource_group.rg.location
   resource_group_name   = azurerm_resource_group.rg.name
-  custom_data = base64encode("sudo apt-get update -y; sudo apt-get install nginx php -y")
+  custom_data = data.template_cloudinit_config.craftcms_config.rendered
   tags                  = local.l_tags
 
   identity {
