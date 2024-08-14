@@ -42,7 +42,7 @@ resource "azurerm_role_assignment" "kv_secrets_user" {
 resource "azurerm_linux_virtual_machine" "linux_vm" {
   name                  = local.vm_name
   network_interface_ids = [azurerm_network_interface.nic.id]
-  size                  = "Standard_A4_v2"
+  size                  = "Standard_A1_v2"
   location              = azurerm_resource_group.rg.location
   resource_group_name   = azurerm_resource_group.rg.name
   tags                  = local.l_tags
@@ -75,37 +75,6 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
   }
 }
 
-resource "azurerm_public_ip" "public_ip" {
-  name                = "${local.vm_name}-ip"
-  allocation_method   = "Static"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  tags                = local.l_tags
-#  depends_on = [azurerm_key_vault.akv]
-#  lifecycle {
-#    ignore_changes = [azure]
-#  }
-}
-
-resource "azurerm_network_security_group" "nsg" {
-  name                = "${random_pet.pet-name.id}-security-group"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  tags                = local.l_tags
-
-  security_rule {
-    name                       = "SSH"
-    priority                   = 300
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "22"
-    source_address_prefixes    = ["0.0.0.0/0"]
-    destination_address_prefix = "*"
-  }
-}
-
 # Create network interface
 resource "azurerm_network_interface" "nic" {
   name                = "${local.vm_name}-nic"
@@ -117,11 +86,5 @@ resource "azurerm_network_interface" "nic" {
     name                          = "${local.vm_name}-ip-config"
     subnet_id                     = azurerm_subnet.subnet_internal.id
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.public_ip.id
   }
-}
-
-resource "azurerm_network_interface_security_group_association" "nsg-group-assoc" {
-  network_interface_id      = azurerm_network_interface.nic.id
-  network_security_group_id = azurerm_network_security_group.nsg.id
 }

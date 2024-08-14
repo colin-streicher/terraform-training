@@ -20,6 +20,18 @@ variable "internal_subnet_space" {
   default     = ["10.10.10.0/24"]
 }
 
+variable "gateway_subnet" {
+  description = "Address space for gateways"
+  type = list(string)
+  default = ["10.10.11.0/24"]
+}
+
+variable "bastion_subnet" {
+  description = "Subnet for bastion host"
+  type = list(string)
+  default = ["10.10.12.0/24"]
+}
+
 variable "tags" {
   type        = map(string)
   description = "Tags"
