@@ -45,7 +45,7 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
   size                  = "Standard_A1_v2"
   location              = azurerm_resource_group.rg.location
   resource_group_name   = azurerm_resource_group.rg.name
-  custom_data = base64encode("sudo apt-get update; sudo apt-get install nginx; sudo apt-get install php")
+  custom_data = base64encode("sudo apt-get update -y; sudo apt-get install nginx php -y")
   tags                  = local.l_tags
 
   identity {
@@ -82,7 +82,7 @@ resource "azurerm_network_interface" "nic" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   tags                = local.l_tags
-  
+
   ip_configuration {
     name                          = "${local.vm_name}-ip-config"
     subnet_id                     = azurerm_subnet.subnet_internal.id
