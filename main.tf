@@ -43,7 +43,11 @@ data "template_cloudinit_config" "craftcms_config" {
   base64_encode = true
   part {
     content_type = "text/cloud-config"
-    content = "packages: ['php', 'php-xml', 'npm', 'nginx']"
+    content = "packages: ['php', 'php-xml', 'composer', 'php-mysql', 'npm', 'nginx', 'python3-pip', 'python3-venv']"
+  }
+  part {
+    content_type = "text/x-shellscript"
+    content = "sudo systemctl disable apache2 && sudo systemctl stop apache2"
   }
 }
 ## Virtual Machine ==============
