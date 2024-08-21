@@ -43,12 +43,14 @@ data "template_cloudinit_config" "craftcms_config" {
   base64_encode = true
   part {
     content_type = "text/cloud-config"
-    content = "packages: ['php', 'php-xml', 'composer', 'php-mysql', 'npm', 'nginx', 'python3-pip', 'python3-venv']"
+    content = "packages: ['php', 'php-xml', 'composer', 'php-mysql', 'npm', 'nginx', 'python3-pip', 'python3-venv', 'mysql-server', 'mysql-client', 'php-bcmath', 'php-fpm']"
   }
+
   part {
     content_type = "text/x-shellscript"
-    content = "sudo systemctl disable apache2 && sudo systemctl stop apache2"
+    content = "sudo apt remove apache2 --assume-yes"
   }
+
 }
 ## Virtual Machine ==============
 resource "azurerm_linux_virtual_machine" "linux_vm" {
