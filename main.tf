@@ -50,7 +50,6 @@ data "template_cloudinit_config" "craftcms_config" {
     content_type = "text/x-shellscript"
     content = "sudo apt remove apache2 --assume-yes"
   }
-
 }
 ## Virtual Machine ==============
 resource "azurerm_linux_virtual_machine" "linux_vm" {
@@ -61,6 +60,8 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
   resource_group_name   = azurerm_resource_group.rg.name
   custom_data = data.template_cloudinit_config.craftcms_config.rendered
   tags                  = local.l_tags
+  source_image_id = "/subscriptions/d2dbb490-c354-494d-9492-250cbfd793fc/resourceGroups/MotumB2BImage/providers/Microsoft.Compute/images/craftcms_mysql_image"
+  
 
   identity {
     type = "UserAssigned"
@@ -71,13 +72,6 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
     name                 = "OsDisk_1_${random_id.rnd.hex}"
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
-  }
-
-  source_image_reference {
-    publisher = "Canonical"
-    offer     = "ubuntu-24_04-lts"
-    sku       = "server-gen1"
-    version   = "latest"
   }
 
   computer_name                   = local.vm_name
