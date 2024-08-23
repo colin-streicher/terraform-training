@@ -171,3 +171,11 @@ resource "azurerm_application_gateway" "gw" {
     backend_http_settings_name = local.be_http_settings
   }
 }
+
+resource "azurerm_dns_a_record" "dns_record" {
+  name = random_pet.pet-name.id
+  zone_name = "training.motumdev.com"
+  ttl = 300
+  resource_group_name = "TrainingDNS"
+  records = ["${azurerm_public_ip.alb-public-ip.ip_address}"]
+}
