@@ -8,5 +8,6 @@ output "connection-details" {
 output "load-balancer-endpoints" {
   value = {
     public_ip=azurerm_public_ip.alb-public-ip.ip_address
+    dns_name=azurerm_dns_a_record.dns_record.fqdn
   }
 }
