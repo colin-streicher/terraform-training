@@ -51,15 +51,14 @@ data "template_cloudinit_config" "craftcms_config" {
     content = "sudo apt remove apache2 --assume-yes"
   }
 }
-## Virtual Machine ==============
-resource "azurerm_linux_virtual_machine" "linux_vm" {
+
+resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   name                  = local.vm_name
-  network_interface_ids = [azurerm_network_interface.nic.id]
-  size                  = "Standard_A1_v2"
   location              = azurerm_resource_group.rg.location
   resource_group_name   = azurerm_resource_group.rg.name
   custom_data = data.template_cloudinit_config.craftcms_config.rendered
   tags                  = local.l_tags
+  instances = 1
   source_image_id = "/subscriptions/d2dbb490-c354-494d-9492-250cbfd793fc/resourceGroups/MotumB2BImage/providers/Microsoft.Compute/images/craftcms_mysql_image"
   
 
@@ -69,12 +68,10 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
   }
 
   os_disk {
-    name                 = "OsDisk_1_${random_id.rnd.hex}"
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
   }
 
-  computer_name                   = local.vm_name
   admin_username                  = "azureuser"
   disable_password_authentication = true
 
@@ -82,19 +79,62 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
     username   = "azureuser"
     public_key = azurerm_ssh_public_key.sshkey.public_key
   }
-}
-
-# Create network interface
-resource "azurerm_network_interface" "nic" {
-  name                = "${local.vm_name}-nic"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  tags                = local.l_tags
-
-  ip_configuration {
-    name                          = "${local.vm_name}-ip-config"
-    subnet_id                     = azurerm_subnet.subnet_internal.id
-    public_ip_address_id = azurerm_public_ip.public_ip.id
-    private_ip_address_allocation = "Dynamic"
+  sku = "Standard_A1_v2"
+  network_interface {
+      name                = "${local.vm_name}-nic"
+      primary = true
+    ip_configuration {
+      primary = true
+      name                          = "${local.vm_name}-ip-config"
+      subnet_id                     = azurerm_subnet.subnet_internal.id
+      application_gateway_backend_address_pool_ids = [for name, value in azurerm_application_gateway.gw.backend_address_pool : value.id]
+    }
   }
 }
+# ## Virtual Machine ==============
+# resource "azurerm_linux_virtual_machine" "linux_vm" {
+#   name                  = local.vm_name
+#   network_interface_ids = [azurerm_network_interface.nic.id]
+#   size                  = "Standard_A1_v2"
+#   location              = azurerm_resource_group.rg.location
+#   resource_group_name   = azurerm_resource_group.rg.name
+#   custom_data = data.template_cloudinit_config.craftcms_config.rendered
+#   tags                  = local.l_tags
+#   source_image_id = "/subscriptions/d2dbb490-c354-494d-9492-250cbfd793fc/resourceGroups/MotumB2BImage/providers/Microsoft.Compute/images/craftcms_mysql_image"
+  
+
+#   identity {
+#     type = "UserAssigned"
+#     identity_ids = [azurerm_user_assigned_identity.uai.id]
+#   }
+
+#   os_disk {
+#     name                 = "OsDisk_1_${random_id.rnd.hex}"
+#     caching              = "ReadWrite"
+#     storage_account_type = "Standard_LRS"
+#   }
+
+#   computer_name                   = local.vm_name
+#   admin_username                  = "azureuser"
+#   disable_password_authentication = true
+
+#   admin_ssh_key {
+#     username   = "azureuser"
+#     public_key = azurerm_ssh_public_key.sshkey.public_key
+#   }
+# }
+
+# # Create network interface
+# resource "azurerm_network_interface" "nic" {
+#   name                = "${local.vm_name}-nic"
+#   location            = azurerm_resource_group.rg.location
+#   resource_group_name = azurerm_resource_group.rg.name
+#   tags                = local.l_tags
+
+#   ip_configuration {
+#     name                          = "${local.vm_name}-ip-config"
+#     subnet_id                     = azurerm_subnet.subnet_internal.id
+#     public_ip_address_id = azurerm_public_ip.public_ip.id
+#     private_ip_address_allocation = "Dynamic"
+#   }
+# }

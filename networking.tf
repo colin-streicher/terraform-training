@@ -143,7 +143,6 @@ resource "azurerm_application_gateway" "gw" {
 
   backend_address_pool {
     name = local.be_address_pool
-    ip_addresses = [azurerm_linux_virtual_machine.linux_vm.private_ip_address]
   }
 
   backend_http_settings {
